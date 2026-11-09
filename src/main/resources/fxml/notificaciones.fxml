@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.VBox?>
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.NotificacionesController" spacing="18" styleClass="page">
+    <padding><Insets top="28" right="32" bottom="32" left="32"/></padding>
+    <VBox spacing="4"><Label text="Notificaciones" styleClass="page-title"/><Label text="Consulta notificaciones e historial de eventos" styleClass="muted-text"/></VBox>
+    <Label text="Notificaciones recientes" styleClass="section-title"/>
+    <TableView VBox.vgrow="ALWAYS"><columns><TableColumn text="Tipo" prefWidth="150"/><TableColumn text="Descripción" prefWidth="440"/><TableColumn text="Fecha y hora" prefWidth="200"/></columns></TableView>
+    <Label text="Historial de eventos" styleClass="section-title"/>
+    <TableView prefHeight="190"><columns><TableColumn text="Evento" prefWidth="180"/><TableColumn text="Descripción" prefWidth="430"/><TableColumn text="Fecha y hora" prefWidth="200"/></columns></TableView>
+</VBox>

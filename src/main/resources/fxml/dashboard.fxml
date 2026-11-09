@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="controller.DashboardController" spacing="22" styleClass="page">
+    <padding><Insets top="28" right="32" bottom="32" left="32"/></padding>
+    <VBox spacing="5">
+        <Label text="Dashboard" styleClass="page-title"/>
+        <Label text="Resumen general de tu hogar inteligente" styleClass="muted-text"/>
+    </VBox>
+    <GridPane hgap="16" vgap="16">
+        <VBox GridPane.columnIndex="0" styleClass="stat-card"><Label text="DISPOSITIVOS" styleClass="card-caption"/><Label text="--" styleClass="stat-value"/><Label text="Total registrados" styleClass="muted-text"/></VBox>
+        <VBox GridPane.columnIndex="1" styleClass="stat-card"><Label text="ENCENDIDOS" styleClass="card-caption"/><Label text="--" styleClass="stat-value"/><Label text="Actualmente activos" styleClass="muted-text"/></VBox>
+        <VBox GridPane.columnIndex="2" styleClass="stat-card"><Label text="HABITACIONES" styleClass="card-caption"/><Label text="--" styleClass="stat-value"/><Label text="Espacios del hogar" styleClass="muted-text"/></VBox>
+        <VBox GridPane.columnIndex="3" styleClass="stat-card"><Label text="AUTOMATIZACIONES" styleClass="card-caption"/><Label text="--" styleClass="stat-value"/><Label text="Reglas activas" styleClass="muted-text"/></VBox>
+    </GridPane>
+    <HBox spacing="18" VBox.vgrow="ALWAYS">
+        <VBox spacing="14" HBox.hgrow="ALWAYS" styleClass="content-card">
+            <Label text="Notificaciones recientes" styleClass="section-title"/>
+            <ListView prefHeight="300" VBox.vgrow="ALWAYS" />
+        </VBox>
+        <VBox spacing="14" prefWidth="260" styleClass="content-card">
+            <Label text="Estado del hogar" styleClass="section-title"/>
+            <Label text="Las métricas aparecerán cuando se conecten los servicios." wrapText="true" styleClass="muted-text"/>
+        </VBox>
+    </HBox>
+</VBox>

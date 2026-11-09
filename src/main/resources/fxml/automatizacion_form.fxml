@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.AutomatizacionFormController" spacing="16" styleClass="form-page">
+    <padding><Insets top="28" right="32" bottom="32" left="32"/></padding>
+    <Label text="Crear automatización" styleClass="page-title"/>
+    <VBox spacing="10" maxWidth="760" styleClass="content-card">
+        <Label text="Nombre" styleClass="field-label"/><TextField promptText="Nombre de la automatización"/>
+        <Label text="Descripción" styleClass="field-label"/><TextArea promptText="Describe el propósito de esta regla" prefRowCount="3" wrapText="true"/>
+        <Label text="Condición" styleClass="field-label"/><ComboBox promptText="Seleccionar condición"/>
+        <Label text="Acciones" styleClass="field-label"/><ComboBox promptText="Seleccionar acciones" maxWidth="Infinity"/>
+        <Label text="Estado inicial" styleClass="field-label"/><ComboBox promptText="Activa o inactiva"/>
+    </VBox>
+    <HBox spacing="10"><Button text="Guardar" onAction="#guardar" styleClass="primary-button"/><Button text="Cancelar" onAction="#cancelar"/></HBox>
+</VBox>
