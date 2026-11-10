@@ -1,39 +1,97 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
-<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="controller.MainController" stylesheets="@../css/app.css" styleClass="app-shell">
+
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="controller.MainController"
+            stylesheets="@../css/app.css"
+            styleClass="app-shell">
+
     <left>
-        <VBox spacing="10" prefWidth="230" styleClass="sidebar">
-            <padding><Insets top="28" right="18" bottom="20" left="18"/></padding>
-            <Label text="⌂  SMART HOME" styleClass="brand"/>
-            <Label text="GESTIÓN DEL HOGAR" styleClass="sidebar-caption"/>
-            <Button text="▦   Dashboard" onAction="#mostrarDashboard" styleClass="nav-button"/>
-            <Button text="◉   Dispositivos" onAction="#mostrarDispositivos" styleClass="nav-button"/>
-            <Button text="⌂   Habitaciones" onAction="#mostrarHabitaciones" styleClass="nav-button"/>
-            <Button text="⟳   Automatizaciones" onAction="#mostrarAutomatizaciones" styleClass="nav-button"/>
-            <Button text="♧   Notificaciones" onAction="#mostrarNotificaciones" styleClass="nav-button"/>
+        <VBox spacing="10"
+              prefWidth="230"
+              styleClass="sidebar">
+
+            <padding>
+                <Insets top="28"
+                        right="18"
+                        bottom="20"
+                        left="18"/>
+            </padding>
+
+            <Label text="⌂  SMART HOME"
+                   styleClass="brand"/>
+
+            <Label text="HOME MANAGEMENT"
+                   styleClass="sidebar-caption"/>
+
+            <Button text="▦   Dashboard"
+                    onAction="#mostrarDashboard"
+                    maxWidth="Infinity"
+                    styleClass="nav-button"/>
+
+            <Button text="◉   Devices"
+                    onAction="#mostrarDispositivos"
+                    maxWidth="Infinity"
+                    styleClass="nav-button"/>
+
+            <Button text="⌂   Rooms"
+                    onAction="#mostrarHabitaciones"
+                    maxWidth="Infinity"
+                    styleClass="nav-button"/>
+
+            <Button text="⟳   Automations"
+                    onAction="#mostrarAutomatizaciones"
+                    maxWidth="Infinity"
+                    styleClass="nav-button"/>
+
+            <Button text="♧   Notifications"
+                    onAction="#mostrarNotificaciones"
+                    maxWidth="Infinity"
+                    styleClass="nav-button"/>
+
             <VBox VBox.vgrow="ALWAYS"/>
-            <Button text="⚙   Configuración" onAction="#mostrarConfiguracion" styleClass="nav-button"/>
+
+            <Button text="⚙   Settings"
+                    onAction="#mostrarConfiguracion"
+                    maxWidth="Infinity"
+                    styleClass="nav-button"/>
         </VBox>
     </left>
+
     <center>
-        <BorderPane>
+        <BorderPane fx:id="contentPane">
+
             <top>
-                <HBox alignment="CENTER_LEFT" styleClass="topbar" spacing="12">
-                    <padding><Insets top="18" right="30" bottom="18" left="30"/></padding>
-                    <Label text="Mi hogar inteligente" styleClass="topbar-title"/>
+                <HBox alignment="CENTER_LEFT"
+                      spacing="12"
+                      styleClass="topbar">
+
+                    <padding>
+                        <Insets top="18"
+                                right="30"
+                                bottom="18"
+                                left="30"/>
+                    </padding>
+
+                    <Label fx:id="sectionTitleLabel"
+                           text="Dashboard"
+                           styleClass="topbar-title"/>
+
                     <HBox HBox.hgrow="ALWAYS"/>
-                    <Label text="●  Sistema preparado" styleClass="status-label"/>
+
+                    <Label text="●  System ready"
+                           styleClass="status-label"/>
                 </HBox>
             </top>
-            <center>
-                <fx:include source="dashboard.fxml"/>
-            </center>
+
         </BorderPane>
     </center>
+
 </BorderPane>
