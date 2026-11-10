@@ -2,17 +2,83 @@ package patterns.command;
 
 import model.CerraduraInteligente;
 
-public class DesbloquearPuertaCommand implements Comando {
-    private CerraduraInteligente cerradura;
+import java.util.Objects;
 
-    public DesbloquearPuertaCommand(CerraduraInteligente cerradura) {
-        this.cerradura = cerradura;
+public class DesbloquearPuertaCommand
+        implements Comando {
+
+    private final CerraduraInteligente cerradura;
+
+    private boolean executed;
+    private boolean changedLockState;
+    private boolean previousLockedState;
+
+    public DesbloquearPuertaCommand(
+            CerraduraInteligente cerradura) {
+
+        this.cerradura = Objects.requireNonNull(
+                cerradura,
+                "Smart lock cannot be null."
+        );
     }
-
-    public CerraduraInteligente getCerradura() { return cerradura; }
-    public void setCerradura(CerraduraInteligente cerradura) { this.cerradura = cerradura; }
 
     @Override
     public void ejecutar() {
+        previousLockedState = cerradura.isBloqueada();
+
+        if (!previousLockedState) {
+            changedLockState = false;
+        } else {
+            cerradura.setBloqueada(false);
+            changedLockState = true;
+        }
+
+        executed = true;
+    }
+
+    @Override
+    public boolean puedeDeshacer() {
+        return executed && changedLockState;
+    }
+
+    @Override
+    public void deshacer() {
+        validateExecution();
+
+        if (!changedLockState) {
+            return;
+        }
+
+        cerradura.setBloqueada(
+                previousLockedState
+        );
+
+        changedLockState = false;
+    }
+
+    @Override
+    public String getDescription() {
+        return "Unlock smart door: "
+                + cerradura.getNombre();
+    }
+
+    public CerraduraInteligente getCerradura() {
+        return cerradura;
+    }
+
+    public boolean wasExecuted() {
+        return executed;
+    }
+
+    public boolean changedLockState() {
+        return changedLockState;
+    }
+
+    private void validateExecution() {
+        if (!executed) {
+            throw new IllegalStateException(
+                    "The command has not been executed."
+            );
+        }
     }
 }

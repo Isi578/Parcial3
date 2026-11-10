@@ -1,5 +1,6 @@
 package model;
 
+import patterns.state.EstadoApagado;
 import patterns.state.EstadoDispositivo;
 
 import java.util.Objects;
@@ -12,10 +13,9 @@ public abstract class Dispositivo {
     private String modelo;
     private EstadoDispositivo estado;
     private Habitacion habitacion;
-    private boolean activo;
 
     protected Dispositivo() {
-        this.activo = false;
+        this.estado = new EstadoApagado();
     }
 
     protected Dispositivo(
@@ -30,8 +30,11 @@ public abstract class Dispositivo {
         this.nombre = requireText(nombre, "Device name");
         this.marca = requireText(marca, "Device brand");
         this.modelo = requireText(modelo, "Device model");
-        this.estado = estado;
-        this.activo = false;
+
+        this.estado = Objects.requireNonNullElseGet(
+                estado,
+                EstadoApagado::new
+        );
 
         if (habitacion != null) {
             habitacion.addDevice(this);
@@ -39,21 +42,29 @@ public abstract class Dispositivo {
     }
 
     public final boolean turnOn() {
-        if (activo) {
+        EstadoDispositivo previousState = estado;
+        EstadoDispositivo nextState =
+                estado.transitionToOn();
+
+        if (nextState == previousState) {
             return false;
         }
 
-        activo = true;
+        estado = nextState;
         onTurnedOn();
         return true;
     }
 
     public final boolean turnOff() {
-        if (!activo) {
+        EstadoDispositivo previousState = estado;
+        EstadoDispositivo nextState =
+                estado.transitionToOff();
+
+        if (nextState == previousState) {
             return false;
         }
 
-        activo = false;
+        estado = nextState;
         onTurnedOff();
         return true;
     }
@@ -69,7 +80,7 @@ public abstract class Dispositivo {
     }
 
     public String getStatusDescription() {
-        return activo ? "ON" : "OFF";
+        return estado.getStateName();
     }
 
     public String getId() {
@@ -85,7 +96,10 @@ public abstract class Dispositivo {
     }
 
     public void setNombre(String nombre) {
-        this.nombre = requireText(nombre, "Device name");
+        this.nombre = requireText(
+                nombre,
+                "Device name"
+        );
     }
 
     public String getMarca() {
@@ -93,7 +107,10 @@ public abstract class Dispositivo {
     }
 
     public void setMarca(String marca) {
-        this.marca = requireText(marca, "Device brand");
+        this.marca = requireText(
+                marca,
+                "Device brand"
+        );
     }
 
     public String getModelo() {
@@ -101,7 +118,10 @@ public abstract class Dispositivo {
     }
 
     public void setModelo(String modelo) {
-        this.modelo = requireText(modelo, "Device model");
+        this.modelo = requireText(
+                modelo,
+                "Device model"
+        );
     }
 
     public EstadoDispositivo getEstado() {
@@ -109,7 +129,10 @@ public abstract class Dispositivo {
     }
 
     public void setEstado(EstadoDispositivo estado) {
-        this.estado = estado;
+        this.estado = Objects.requireNonNull(
+                estado,
+                "Device state cannot be null."
+        );
     }
 
     public Habitacion getHabitacion() {
@@ -123,10 +146,13 @@ public abstract class Dispositivo {
 
         if (habitacion == null) {
             if (this.habitacion != null) {
-                Habitacion previousRoom = this.habitacion;
+                Habitacion previousRoom =
+                        this.habitacion;
+
                 this.habitacion = null;
                 previousRoom.removeDeviceReference(this);
             }
+
             return;
         }
 
@@ -138,7 +164,7 @@ public abstract class Dispositivo {
     }
 
     public boolean isActivo() {
-        return activo;
+        return estado.isPoweredOn();
     }
 
     public void setActivo(boolean activo) {
@@ -149,9 +175,14 @@ public abstract class Dispositivo {
         }
     }
 
-    private static String requireText(String value, String fieldName) {
+    private static String requireText(
+            String value,
+            String fieldName) {
+
         if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException(fieldName + " cannot be empty.");
+            throw new IllegalArgumentException(
+                    fieldName + " cannot be empty."
+            );
         }
 
         return value.trim();
