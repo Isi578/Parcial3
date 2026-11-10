@@ -6,8 +6,18 @@ import java.util.List;
 import java.util.Optional;
 
 public interface DispositivoRepository {
-    List<Dispositivo> buscarTodos();
-    Optional<Dispositivo> buscarPorId(String id);
-    void guardar(Dispositivo dispositivo);
-    void eliminar(String id);
+
+    List<Dispositivo> findAll();
+
+    Optional<Dispositivo> findById(String id);
+
+    boolean existsById(String id);
+
+    Dispositivo save(Dispositivo dispositivo);
+
+    boolean deleteById(String id);
+
+    long count();
+
+    void clear();
 }
