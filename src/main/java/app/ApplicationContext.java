@@ -2,6 +2,8 @@ package app;
 
 import patterns.command.ControladorComandos;
 import patterns.facade.HogarFacade;
+import patterns.observer.HistorialObserver;
+import patterns.observer.NotificacionObserver;
 import patterns.singleton.ConfiguracionHogar;
 import repository.DispositivoRepository;
 import repository.InMemoryDispositivoRepository;
@@ -14,6 +16,8 @@ public final class ApplicationContext {
     private final ControladorComandos commandController;
     private final HogarFacade hogarFacade;
     private final ConfiguracionHogar homeConfiguration;
+    private final HistorialObserver historyObserver;
+    private final NotificacionObserver notificationObserver;
 
     private ApplicationContext() {
         this.dispositivoRepository =
@@ -35,6 +39,14 @@ public final class ApplicationContext {
 
         this.homeConfiguration =
                 ConfiguracionHogar.getInstance();
+
+        this.historyObserver =
+                new HistorialObserver();
+
+        this.notificationObserver =
+                new NotificacionObserver();
+
+        synchronizeNotificationSettings();
     }
 
     private static final class InstanceHolder {
@@ -48,6 +60,19 @@ public final class ApplicationContext {
 
     public static ApplicationContext getInstance() {
         return InstanceHolder.INSTANCE;
+    }
+
+    public void synchronizeNotificationSettings() {
+        notificationObserver.setEnabled(
+                homeConfiguration
+                        .isNotificationsEnabled()
+        );
+    }
+
+    public void clearSessionActivity() {
+        historyObserver.clearHistory();
+        notificationObserver.clearNotifications();
+        commandController.clearHistory();
     }
 
     public DispositivoRepository getDispositivoRepository() {
@@ -68,5 +93,13 @@ public final class ApplicationContext {
 
     public ConfiguracionHogar getHomeConfiguration() {
         return homeConfiguration;
+    }
+
+    public HistorialObserver getHistoryObserver() {
+        return historyObserver;
+    }
+
+    public NotificacionObserver getNotificationObserver() {
+        return notificationObserver;
     }
 }

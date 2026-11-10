@@ -24,21 +24,19 @@ public class BloquearPuertaCommand
 
     @Override
     public void ejecutar() {
-        previousLockedState = cerradura.isBloqueada();
+        previousLockedState =
+                cerradura.isBloqueada();
 
-        if (previousLockedState) {
-            changedLockState = false;
-        } else {
-            cerradura.setBloqueada(true);
-            changedLockState = true;
-        }
+        changedLockState =
+                cerradura.lock();
 
         executed = true;
     }
 
     @Override
     public boolean puedeDeshacer() {
-        return executed && changedLockState;
+        return executed
+                && changedLockState;
     }
 
     @Override
@@ -49,11 +47,16 @@ public class BloquearPuertaCommand
             return;
         }
 
-        cerradura.setBloqueada(
-                previousLockedState
-        );
-
+        restorePreviousState();
         changedLockState = false;
+    }
+
+    private void restorePreviousState() {
+        if (previousLockedState) {
+            cerradura.lock();
+        } else {
+            cerradura.unlock();
+        }
     }
 
     @Override
