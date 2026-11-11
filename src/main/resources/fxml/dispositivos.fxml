@@ -1,15 +1,140 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
-<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.TableColumn?>
-<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.Separator?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
-<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.DispositivosController" spacing="18" styleClass="page">
-    <padding><Insets top="28" right="32" bottom="32" left="32"/></padding>
-    <HBox alignment="CENTER_LEFT" spacing="12"><VBox spacing="4"><Label text="Dispositivos" styleClass="page-title"/><Label text="Administra los equipos del hogar" styleClass="muted-text"/></VBox><HBox HBox.hgrow="ALWAYS"/><Button text="+ Registrar dispositivo" onAction="#registrarDispositivo" styleClass="primary-button"/></HBox>
-    <HBox spacing="10" alignment="CENTER_LEFT"><Label text="Filtrar por tipo:"/><ComboBox promptText="Todos los tipos" prefWidth="210"/><HBox HBox.hgrow="ALWAYS"/><Button text="Editar" onAction="#editarDispositivo"/><Button text="Eliminar" onAction="#eliminarDispositivo" styleClass="danger-button"/><Button text="Encender" onAction="#encenderDispositivo" styleClass="primary-button"/><Button text="Apagar" onAction="#apagarDispositivo"/></HBox>
-    <TableView VBox.vgrow="ALWAYS"><columns><TableColumn text="Nombre" prefWidth="180"/><TableColumn text="Tipo" prefWidth="150"/><TableColumn text="Habitación" prefWidth="170"/><TableColumn text="Estado" prefWidth="130"/><TableColumn text="Marca / Modelo" prefWidth="220"/></columns></TableView>
+
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="controller.DispositivosController"
+      spacing="16"
+      style="-fx-background-color: #f8fafc;">
+
+    <padding>
+        <Insets top="24"
+                right="30"
+                bottom="24"
+                left="30"/>
+    </padding>
+
+    <Label text="Smart Devices"
+           style="-fx-font-size: 24px;
+                  -fx-font-weight: bold;
+                  -fx-text-fill: #0f172a;"/>
+
+    <Label text="Control power devices and smart locks through Command and State."
+           wrapText="true"
+           style="-fx-font-size: 13px;
+                  -fx-text-fill: #475569;"/>
+
+    <Label fx:id="summaryLabel"
+           text="0 of 0 devices are active"
+           style="-fx-font-size: 14px;
+                  -fx-font-weight: bold;
+                  -fx-text-fill: #1e293b;"/>
+
+    <ListView fx:id="devicesListView"
+              prefHeight="315"
+              VBox.vgrow="ALWAYS"
+              style="-fx-background-radius: 8;
+                     -fx-border-radius: 8;
+                     -fx-border-color: #cbd5e1;"/>
+
+    <Label fx:id="selectedDeviceLabel"
+           text="No device selected."
+           wrapText="true"
+           style="-fx-font-size: 14px;
+                  -fx-text-fill: #0f172a;"/>
+
+    <HBox spacing="10">
+
+        <Button fx:id="turnOnButton"
+                text="Turn On"
+                onAction="#turnOnSelectedDevice"
+                style="-fx-background-color: #16a34a;
+                       -fx-text-fill: white;
+                       -fx-font-weight: bold;
+                       -fx-background-radius: 6;"/>
+
+        <Button fx:id="turnOffButton"
+                text="Turn Off"
+                onAction="#turnOffSelectedDevice"
+                style="-fx-background-color: #dc2626;
+                       -fx-text-fill: white;
+                       -fx-font-weight: bold;
+                       -fx-background-radius: 6;"/>
+
+        <Button fx:id="lockButton"
+                text="Lock"
+                onAction="#lockSelectedDevice"
+                style="-fx-background-color: #d97706;
+                       -fx-text-fill: white;
+                       -fx-font-weight: bold;
+                       -fx-background-radius: 6;"/>
+
+        <Button fx:id="unlockButton"
+                text="Unlock"
+                onAction="#unlockSelectedDevice"
+                style="-fx-background-color: #0284c7;
+                       -fx-text-fill: white;
+                       -fx-font-weight: bold;
+                       -fx-background-radius: 6;"/>
+
+        <Button fx:id="undoButton"
+                text="Undo"
+                onAction="#undoLastAction"
+                style="-fx-background-color: #7c3aed;
+                       -fx-text-fill: white;
+                       -fx-font-weight: bold;
+                       -fx-background-radius: 6;"/>
+
+        <Button text="Refresh"
+                onAction="#refreshDevices"
+                style="-fx-background-color: #334155;
+                       -fx-text-fill: white;
+                       -fx-font-weight: bold;
+                       -fx-background-radius: 6;"/>
+
+        <HBox HBox.hgrow="ALWAYS"/>
+
+    </HBox>
+
+    <Label fx:id="feedbackLabel"
+           text="Ready."
+           wrapText="true"
+           style="-fx-font-size: 13px;
+                  -fx-text-fill: #047857;"/>
+
+    <Separator/>
+
+    <VBox spacing="8"
+          style="-fx-background-color: white;
+                 -fx-padding: 14;
+                 -fx-background-radius: 8;
+                 -fx-border-color: #e2e8f0;
+                 -fx-border-radius: 8;">
+
+        <Label text="Observer Activity"
+               style="-fx-font-size: 15px;
+                      -fx-font-weight: bold;
+                      -fx-text-fill: #0f172a;"/>
+
+        <Label fx:id="eventLabel"
+               text="Last event: No events recorded."
+               wrapText="true"
+               style="-fx-font-size: 12px;
+                      -fx-text-fill: #334155;"/>
+
+        <Label fx:id="notificationLabel"
+               text="Last notification: No notifications recorded."
+               wrapText="true"
+               style="-fx-font-size: 12px;
+                      -fx-text-fill: #334155;"/>
+
+    </VBox>
+
 </VBox>

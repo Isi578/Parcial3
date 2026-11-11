@@ -2,6 +2,7 @@ package app;
 
 import patterns.command.ControladorComandos;
 import patterns.facade.HogarFacade;
+import patterns.mediator.HogarMediator;
 import patterns.observer.HistorialObserver;
 import patterns.observer.NotificacionObserver;
 import patterns.singleton.ConfiguracionHogar;
@@ -14,10 +15,11 @@ public final class ApplicationContext {
     private final DispositivoRepository dispositivoRepository;
     private final DispositivoService dispositivoService;
     private final ControladorComandos commandController;
-    private final HogarFacade hogarFacade;
     private final ConfiguracionHogar homeConfiguration;
     private final HistorialObserver historyObserver;
     private final NotificacionObserver notificationObserver;
+    private final HogarFacade hogarFacade;
+    private final HogarMediator hogarMediator;
 
     private ApplicationContext() {
         this.dispositivoRepository =
@@ -31,12 +33,6 @@ public final class ApplicationContext {
         this.commandController =
                 new ControladorComandos();
 
-        this.hogarFacade =
-                new HogarFacade(
-                        dispositivoService,
-                        commandController
-                );
-
         this.homeConfiguration =
                 ConfiguracionHogar.getInstance();
 
@@ -47,6 +43,17 @@ public final class ApplicationContext {
                 new NotificacionObserver();
 
         synchronizeNotificationSettings();
+
+        this.hogarFacade =
+                new HogarFacade(
+                        dispositivoService,
+                        commandController,
+                        historyObserver,
+                        notificationObserver
+                );
+
+        this.hogarMediator =
+                new HogarMediator();
     }
 
     private static final class InstanceHolder {
@@ -101,5 +108,9 @@ public final class ApplicationContext {
 
     public NotificacionObserver getNotificationObserver() {
         return notificationObserver;
+    }
+
+    public HogarMediator getHogarMediator() {
+        return hogarMediator;
     }
 }

@@ -1,25 +1,41 @@
 package patterns.facade;
 
 import model.Dispositivo;
+import model.Evento;
 import model.Habitacion;
 import patterns.command.ApagarDispositivoCommand;
 import patterns.command.Comando;
 import patterns.command.ControladorComandos;
 import patterns.command.EncenderDispositivoCommand;
+import patterns.observer.DispositivoObservable;
+import patterns.observer.HistorialObserver;
+import patterns.observer.NotificacionObserver;
 import service.DispositivoService;
 
+import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 
 public final class HogarFacade {
 
     private final DispositivoService deviceService;
     private final ControladorComandos commandController;
+    private final HistorialObserver historyObserver;
+    private final NotificacionObserver notificationObserver;
+
+    private final Map<String, DispositivoObservable>
+            observableDevices =
+            new LinkedHashMap<>();
 
     public HogarFacade(
             DispositivoService deviceService,
-            ControladorComandos commandController) {
+            ControladorComandos commandController,
+            HistorialObserver historyObserver,
+            NotificacionObserver notificationObserver) {
 
         this.deviceService = Objects.requireNonNull(
                 deviceService,
@@ -30,23 +46,76 @@ public final class HogarFacade {
                 commandController,
                 "Command controller cannot be null."
         );
+
+        this.historyObserver = Objects.requireNonNull(
+                historyObserver,
+                "History observer cannot be null."
+        );
+
+        this.notificationObserver =
+                Objects.requireNonNull(
+                        notificationObserver,
+                        "Notification observer cannot be null."
+                );
     }
 
     public Dispositivo registerDevice(
             Dispositivo device) {
 
-        return deviceService.registerDevice(device);
+        Dispositivo registeredDevice =
+                deviceService.registerDevice(device);
+
+        registerObservableDevice(
+                registeredDevice
+        );
+
+        publishDeviceEvent(
+                registeredDevice,
+                "Device registered."
+        );
+
+        return registeredDevice;
     }
 
     public Dispositivo updateDevice(
             Dispositivo device) {
 
-        return deviceService.updateDevice(device);
+        Dispositivo updatedDevice =
+                deviceService.updateDevice(device);
+
+        registerObservableDevice(
+                updatedDevice
+        );
+
+        publishDeviceEvent(
+                updatedDevice,
+                "Device information updated."
+        );
+
+        return updatedDevice;
     }
 
     public boolean deleteDevice(String deviceId) {
-        requireId(deviceId);
-        return deviceService.deleteDevice(deviceId);
+        Dispositivo device =
+                getRequiredDevice(deviceId);
+
+        boolean deleted =
+                deviceService.deleteDevice(deviceId);
+
+        if (!deleted) {
+            return false;
+        }
+
+        publishDeviceEvent(
+                device,
+                "Device deleted."
+        );
+
+        observableDevices.remove(
+                normalizeId(deviceId)
+        );
+
+        return true;
     }
 
     public List<Dispositivo> getAllDevices() {
@@ -56,18 +125,22 @@ public final class HogarFacade {
     public Optional<Dispositivo> findDeviceById(
             String deviceId) {
 
-        requireId(deviceId);
-        return deviceService.getDeviceById(deviceId);
+        return deviceService.getDeviceById(
+                normalizeId(deviceId)
+        );
     }
 
     public Dispositivo getRequiredDevice(
             String deviceId) {
 
-        return findDeviceById(deviceId)
+        String normalizedId =
+                normalizeId(deviceId);
+
+        return findDeviceById(normalizedId)
                 .orElseThrow(
                         () -> new IllegalArgumentException(
                                 "Device with id '"
-                                        + deviceId.trim()
+                                        + normalizedId
                                         + "' is not registered."
                         )
                 );
@@ -77,58 +150,143 @@ public final class HogarFacade {
         Dispositivo device =
                 getRequiredDevice(deviceId);
 
-        boolean previousState = device.isActivo();
+        boolean previousState =
+                device.isActivo();
 
         commandController.ejecutarComando(
                 new EncenderDispositivoCommand(device)
         );
 
-        return previousState != device.isActivo();
+        boolean changed =
+                previousState != device.isActivo();
+
+        if (changed) {
+            publishDeviceEvent(
+                    device,
+                    "Device turned on."
+            );
+        }
+
+        return changed;
     }
 
     public boolean turnOffDevice(String deviceId) {
         Dispositivo device =
                 getRequiredDevice(deviceId);
 
-        boolean previousState = device.isActivo();
+        boolean previousState =
+                device.isActivo();
 
         commandController.ejecutarComando(
                 new ApagarDispositivoCommand(device)
         );
 
-        return previousState != device.isActivo();
+        boolean changed =
+                previousState != device.isActivo();
+
+        if (changed) {
+            publishDeviceEvent(
+                    device,
+                    "Device turned off."
+            );
+        }
+
+        return changed;
+    }
+
+    public Optional<Comando> undoLastCommand() {
+        Optional<Comando> undoneCommand =
+                commandController
+                        .deshacerUltimoComando();
+
+        undoneCommand.ifPresent(
+                command -> publishUndoEvent(command)
+        );
+
+        return undoneCommand;
     }
 
     public Dispositivo assignDeviceToRoom(
             String deviceId,
             Habitacion room) {
 
-        requireId(deviceId);
-
         Objects.requireNonNull(
                 room,
                 "Room cannot be null."
         );
 
-        return deviceService.assignDeviceToRoom(
-                deviceId,
-                room
+        Dispositivo device =
+                deviceService.assignDeviceToRoom(
+                        normalizeId(deviceId),
+                        room
+                );
+
+        publishDeviceEvent(
+                device,
+                "Device assigned to room: "
+                        + room.getNombre()
+                        + "."
         );
+
+        return device;
     }
 
     public Dispositivo removeDeviceFromRoom(
             String deviceId) {
 
-        requireId(deviceId);
+        Dispositivo device =
+                getRequiredDevice(deviceId);
 
-        return deviceService.removeDeviceFromRoom(
-                deviceId
+        String previousRoomName =
+                device.getHabitacion() == null
+                        ? "No room"
+                        : device
+                        .getHabitacion()
+                        .getNombre();
+
+        Dispositivo updatedDevice =
+                deviceService.removeDeviceFromRoom(
+                        normalizeId(deviceId)
+                );
+
+        publishDeviceEvent(
+                updatedDevice,
+                "Device removed from room: "
+                        + previousRoomName
+                        + "."
         );
+
+        return updatedDevice;
     }
 
-    public Optional<Comando> undoLastCommand() {
-        return commandController
-                .deshacerUltimoComando();
+    public void publishDeviceEvent(
+            Dispositivo device,
+            String description) {
+
+        Objects.requireNonNull(
+                device,
+                "Device cannot be null."
+        );
+
+        String validDescription =
+                requireText(
+                        description,
+                        "Event description"
+                );
+
+        DispositivoObservable observable =
+                getOrCreateObservable(device);
+
+        Evento event =
+                new Evento(
+                        UUID.randomUUID().toString(),
+                        null,
+                        validDescription,
+                        LocalDateTime.now(),
+                        device
+                );
+
+        observable.publishEvent(event);
     }
 
     public Optional<String> getLastCommandDescription() {
@@ -159,6 +317,10 @@ public final class HogarFacade {
         return deviceService.countActiveDevices();
     }
 
+    public int countObservedDevices() {
+        return observableDevices.size();
+    }
+
     public String getDeviceSummary() {
         return countActiveDevices()
                 + " of "
@@ -174,13 +336,129 @@ public final class HogarFacade {
         return commandController;
     }
 
-    private static void requireId(String deviceId) {
-        if (deviceId == null
-                || deviceId.isBlank()) {
+    public HistorialObserver getHistoryObserver() {
+        return historyObserver;
+    }
 
+    public NotificacionObserver getNotificationObserver() {
+        return notificationObserver;
+    }
+
+    private void registerObservableDevice(
+            Dispositivo device) {
+
+        String deviceId =
+                normalizeId(device.getId());
+
+        DispositivoObservable existingObservable =
+                observableDevices.get(deviceId);
+
+        if (existingObservable != null
+                && existingObservable.getDispositivo()
+                == device) {
+
+            return;
+        }
+
+        DispositivoObservable observable =
+                new DispositivoObservable(device);
+
+        observable.addObserver(
+                historyObserver
+        );
+
+        observable.addObserver(
+                notificationObserver
+        );
+
+        observableDevices.put(
+                deviceId,
+                observable
+        );
+    }
+
+    private DispositivoObservable getOrCreateObservable(
+            Dispositivo device) {
+
+        String deviceId =
+                normalizeId(device.getId());
+
+        DispositivoObservable observable =
+                observableDevices.get(deviceId);
+
+        if (observable == null
+                || observable.getDispositivo()
+                != device) {
+
+            registerObservableDevice(device);
+
+            observable =
+                    observableDevices.get(deviceId);
+        }
+
+        return observable;
+    }
+
+    private void publishUndoEvent(
+            Comando command) {
+
+        Dispositivo relatedDevice =
+                resolveCommandDevice(command);
+
+        if (relatedDevice == null) {
+            return;
+        }
+
+        publishDeviceEvent(
+                relatedDevice,
+                "Command undone: "
+                        + command.getDescription()
+                        + ". Current status: "
+                        + relatedDevice
+                        .getStatusDescription()
+                        + "."
+        );
+    }
+
+    private static Dispositivo resolveCommandDevice(
+            Comando command) {
+
+        if (command
+                instanceof EncenderDispositivoCommand
+                turnOnCommand) {
+
+            return turnOnCommand.getDispositivo();
+        }
+
+        if (command
+                instanceof ApagarDispositivoCommand
+                turnOffCommand) {
+
+            return turnOffCommand.getDispositivo();
+        }
+
+        return null;
+    }
+
+    private static String normalizeId(
+            String deviceId) {
+
+        return requireText(
+                deviceId,
+                "Device id"
+        );
+    }
+
+    private static String requireText(
+            String value,
+            String fieldName) {
+
+        if (value == null || value.isBlank()) {
             throw new IllegalArgumentException(
-                    "Device id cannot be empty."
+                    fieldName + " cannot be empty."
             );
         }
+
+        return value.trim();
     }
 }

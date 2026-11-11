@@ -1,10 +1,616 @@
 package controller;
 
+import app.ApplicationContext;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
+import model.CerraduraInteligente;
+import model.Dispositivo;
+import patterns.composite.ComponenteHogar;
+import patterns.composite.DispositivoIndividual;
+import patterns.composite.GrupoDispositivos;
+import patterns.facade.HogarFacade;
+
+import java.util.List;
 
 public class HabitacionesController {
-    @FXML private void registrarHabitacion() { }
-    @FXML private void editarHabitacion() { }
-    @FXML private void eliminarHabitacion() { }
-    @FXML private void consultarDispositivos() { }
+
+    private static final String LIVING_ROOM_GROUP_ID =
+            "group-living-room";
+
+    private static final String SECURITY_GROUP_ID =
+            "group-security";
+
+    private final ApplicationContext applicationContext =
+            ApplicationContext.getInstance();
+
+    private final HogarFacade homeFacade =
+            applicationContext.getHogarFacade();
+
+    private final ObservableList<GrupoDispositivos> groups =
+            FXCollections.observableArrayList();
+
+    @FXML
+    private ListView<GrupoDispositivos> groupsListView;
+
+    @FXML
+    private ListView<ComponenteHogar> componentsListView;
+
+    @FXML
+    private Label selectedGroupLabel;
+
+    @FXML
+    private Label groupSummaryLabel;
+
+    @FXML
+    private Label totalSummaryLabel;
+
+    @FXML
+    private Label feedbackLabel;
+
+    @FXML
+    private Button turnOnGroupButton;
+
+    @FXML
+    private Button turnOffGroupButton;
+
+    @FXML
+    private void initialize() {
+        configureGroupList();
+        configureComponentList();
+        configureSelectionListener();
+        rebuildGroups();
+
+        if (!groups.isEmpty()) {
+            groupsListView
+                    .getSelectionModel()
+                    .selectFirst();
+        }
+    }
+
+    private void configureGroupList() {
+        groupsListView.setItems(groups);
+
+        groupsListView.setCellFactory(
+                listView -> new ListCell<>() {
+
+                    @Override
+                    protected void updateItem(
+                            GrupoDispositivos group,
+                            boolean empty) {
+
+                        super.updateItem(group, empty);
+
+                        if (empty || group == null) {
+                            setText(null);
+                            return;
+                        }
+
+                        setText(
+                                group.getName()
+                                        + " | "
+                                        + group.getStatusDescription()
+                        );
+                    }
+                }
+        );
+    }
+
+    private void configureComponentList() {
+        componentsListView.setCellFactory(
+                listView -> new ListCell<>() {
+
+                    @Override
+                    protected void updateItem(
+                            ComponenteHogar component,
+                            boolean empty) {
+
+                        super.updateItem(
+                                component,
+                                empty
+                        );
+
+                        if (empty || component == null) {
+                            setText(null);
+                            return;
+                        }
+
+                        setText(
+                                component.getName()
+                                        + " | "
+                                        + component
+                                        .getStatusDescription()
+                        );
+                    }
+                }
+        );
+    }
+
+    private void configureSelectionListener() {
+        groupsListView
+                .getSelectionModel()
+                .selectedItemProperty()
+                .addListener(
+                        (observable,
+                         previousGroup,
+                         selectedGroup) ->
+                                showSelectedGroup(
+                                        selectedGroup
+                                )
+                );
+    }
+
+    @FXML
+    private void rebuildGroups() {
+        String selectedGroupId =
+                getSelectedGroupId();
+
+        groups.clear();
+
+        GrupoDispositivos livingRoomGroup =
+                new GrupoDispositivos(
+                        LIVING_ROOM_GROUP_ID,
+                        "Living Room"
+                );
+
+        GrupoDispositivos securityGroup =
+                new GrupoDispositivos(
+                        SECURITY_GROUP_ID,
+                        "Security"
+                );
+
+        List<Dispositivo> registeredDevices =
+                homeFacade.getAllDevices();
+
+        for (Dispositivo device :
+                registeredDevices) {
+
+            DispositivoIndividual component =
+                    new DispositivoIndividual(
+                            device
+                    );
+
+            if (device
+                    instanceof CerraduraInteligente) {
+
+                securityGroup.addComponent(
+                        component
+                );
+
+                continue;
+            }
+
+            livingRoomGroup.addComponent(
+                    component
+            );
+        }
+
+        groups.add(livingRoomGroup);
+        groups.add(securityGroup);
+
+        restoreGroupSelection(
+                selectedGroupId
+        );
+
+        updateTotalSummary();
+
+        if (registeredDevices.isEmpty()) {
+            showFeedback(
+                    "No devices are registered. "
+                            + "Open Devices first.",
+                    true
+            );
+        } else {
+            showFeedback(
+                    "Composite groups were rebuilt "
+                            + "from the shared devices.",
+                    false
+            );
+        }
+    }
+
+    @FXML
+    private void turnOnSelectedGroup() {
+        GrupoDispositivos selectedGroup =
+                getRequiredSelectedGroup();
+
+        if (selectedGroup == null) {
+            return;
+        }
+
+        try {
+            if (containsOnlySmartLocks(
+                    selectedGroup)) {
+
+                showFeedback(
+                        "The Security group contains smart locks. "
+                                + "Use Lock and Unlock from Devices.",
+                        true
+                );
+
+                return;
+            }
+
+            int activeBefore =
+                    selectedGroup
+                            .getActiveDeviceCount();
+
+            selectedGroup.turnOn();
+
+            int activeAfter =
+                    selectedGroup
+                            .getActiveDeviceCount();
+
+            publishChangedDeviceEvents(
+                    selectedGroup,
+                    true
+            );
+
+            refreshCompositeView(
+                    selectedGroup.getId()
+            );
+
+            showFeedback(
+                    buildGroupActionMessage(
+                            selectedGroup,
+                            "turned on",
+                            activeAfter - activeBefore
+                    ),
+                    false
+            );
+        } catch (RuntimeException exception) {
+            showFeedback(
+                    getErrorMessage(exception),
+                    true
+            );
+        }
+    }
+
+    @FXML
+    private void turnOffSelectedGroup() {
+        GrupoDispositivos selectedGroup =
+                getRequiredSelectedGroup();
+
+        if (selectedGroup == null) {
+            return;
+        }
+
+        try {
+            if (containsOnlySmartLocks(
+                    selectedGroup)) {
+
+                showFeedback(
+                        "The Security group contains smart locks. "
+                                + "Use Lock and Unlock from Devices.",
+                        true
+                );
+
+                return;
+            }
+
+            int activeBefore =
+                    selectedGroup
+                            .getActiveDeviceCount();
+
+            selectedGroup.turnOff();
+
+            int activeAfter =
+                    selectedGroup
+                            .getActiveDeviceCount();
+
+            publishChangedDeviceEvents(
+                    selectedGroup,
+                    false
+            );
+
+            refreshCompositeView(
+                    selectedGroup.getId()
+            );
+
+            showFeedback(
+                    buildGroupActionMessage(
+                            selectedGroup,
+                            "turned off",
+                            activeBefore - activeAfter
+                    ),
+                    false
+            );
+        } catch (RuntimeException exception) {
+            showFeedback(
+                    getErrorMessage(exception),
+                    true
+            );
+        }
+    }
+
+    @FXML
+    private void refreshGroups() {
+        rebuildGroups();
+    }
+
+    private void publishChangedDeviceEvents(
+            GrupoDispositivos group,
+            boolean turnedOn) {
+
+        for (ComponenteHogar component :
+                group.getComponents()) {
+
+            if (!(component
+                    instanceof DispositivoIndividual
+                    individualDevice)) {
+
+                continue;
+            }
+
+            Dispositivo device =
+                    individualDevice.getDevice();
+
+            if (device
+                    instanceof CerraduraInteligente) {
+
+                continue;
+            }
+
+            boolean expectedState =
+                    turnedOn;
+
+            if (device.isActivo()
+                    == expectedState) {
+
+                homeFacade.publishDeviceEvent(
+                        device,
+                        turnedOn
+                                ? "Device turned on through "
+                                + "Composite group '"
+                                + group.getName()
+                                + "'."
+                                : "Device turned off through "
+                                + "Composite group '"
+                                + group.getName()
+                                + "'."
+                );
+            }
+        }
+    }
+
+    private void refreshCompositeView(
+            String selectedGroupId) {
+
+        groupsListView.refresh();
+
+        restoreGroupSelection(
+                selectedGroupId
+        );
+
+        GrupoDispositivos selectedGroup =
+                groupsListView
+                        .getSelectionModel()
+                        .getSelectedItem();
+
+        showSelectedGroup(selectedGroup);
+        updateTotalSummary();
+    }
+
+    private void showSelectedGroup(
+            GrupoDispositivos group) {
+
+        if (group == null) {
+            selectedGroupLabel.setText(
+                    "No group selected."
+            );
+
+            groupSummaryLabel.setText(
+                    "Select a group to inspect its devices."
+            );
+
+            componentsListView.setItems(
+                    FXCollections.observableArrayList()
+            );
+
+            updateActionAvailability(null);
+            return;
+        }
+
+        selectedGroupLabel.setText(
+                "Selected group: "
+                        + group.getName()
+        );
+
+        groupSummaryLabel.setText(
+                "Devices: "
+                        + group.getDeviceCount()
+                        + " | Active: "
+                        + group.getActiveDeviceCount()
+                        + " | All active: "
+                        + yesNo(group.isActive())
+                        + " | Any active: "
+                        + yesNo(
+                        group.hasAnyActiveDevice()
+                )
+        );
+
+        componentsListView.setItems(
+                FXCollections.observableArrayList(
+                        group.getComponents()
+                )
+        );
+
+        updateActionAvailability(group);
+    }
+
+    private void updateTotalSummary() {
+        int totalDevices =
+                groups.stream()
+                        .mapToInt(
+                                GrupoDispositivos::getDeviceCount
+                        )
+                        .sum();
+
+        int activeDevices =
+                groups.stream()
+                        .mapToInt(
+                                GrupoDispositivos
+                                        ::getActiveDeviceCount
+                        )
+                        .sum();
+
+        totalSummaryLabel.setText(
+                "Composite summary: "
+                        + activeDevices
+                        + " of "
+                        + totalDevices
+                        + " devices are active in "
+                        + groups.size()
+                        + " groups."
+        );
+    }
+
+    private void updateActionAvailability(
+            GrupoDispositivos group) {
+
+        boolean unavailable =
+                group == null
+                        || group.getDeviceCount() == 0
+                        || containsOnlySmartLocks(group);
+
+        turnOnGroupButton.setDisable(
+                unavailable
+        );
+
+        turnOffGroupButton.setDisable(
+                unavailable
+        );
+    }
+
+    private static boolean containsOnlySmartLocks(
+            GrupoDispositivos group) {
+
+        if (group == null
+                || group.getComponents().isEmpty()) {
+
+            return false;
+        }
+
+        return group.getComponents()
+                .stream()
+                .allMatch(component ->
+                        component
+                                instanceof DispositivoIndividual
+                                individualDevice
+                                && individualDevice
+                                .getDevice()
+                                instanceof CerraduraInteligente
+                );
+    }
+
+    private GrupoDispositivos
+    getRequiredSelectedGroup() {
+
+        GrupoDispositivos selectedGroup =
+                groupsListView
+                        .getSelectionModel()
+                        .getSelectedItem();
+
+        if (selectedGroup == null) {
+            showFeedback(
+                    "Select a group first.",
+                    true
+            );
+        }
+
+        return selectedGroup;
+    }
+
+    private String getSelectedGroupId() {
+        GrupoDispositivos selectedGroup =
+                groupsListView
+                        .getSelectionModel()
+                        .getSelectedItem();
+
+        return selectedGroup == null
+                ? null
+                : selectedGroup.getId();
+    }
+
+    private void restoreGroupSelection(
+            String groupId) {
+
+        if (groups.isEmpty()) {
+            groupsListView
+                    .getSelectionModel()
+                    .clearSelection();
+
+            showSelectedGroup(null);
+            return;
+        }
+
+        if (groupId != null
+                && !groupId.isBlank()) {
+
+            for (GrupoDispositivos group :
+                    groups) {
+
+                if (groupId.equals(group.getId())) {
+                    groupsListView
+                            .getSelectionModel()
+                            .select(group);
+
+                    return;
+                }
+            }
+        }
+
+        groupsListView
+                .getSelectionModel()
+                .selectFirst();
+    }
+
+    private static String buildGroupActionMessage(
+            GrupoDispositivos group,
+            String action,
+            int changedDevices) {
+
+        return "Group '"
+                + group.getName()
+                + "' was "
+                + action
+                + ". Changed devices: "
+                + Math.max(changedDevices, 0)
+                + ".";
+    }
+
+    private void showFeedback(
+            String message,
+            boolean error) {
+
+        feedbackLabel.setText(message);
+
+        feedbackLabel.setStyle(
+                error
+                        ? "-fx-text-fill: #b91c1c;"
+                        : "-fx-text-fill: #047857;"
+        );
+    }
+
+    private static String yesNo(boolean value) {
+        return value ? "YES" : "NO";
+    }
+
+    private static String getErrorMessage(
+            RuntimeException exception) {
+
+        if (exception.getMessage() == null
+                || exception.getMessage().isBlank()) {
+
+            return exception
+                    .getClass()
+                    .getSimpleName();
+        }
+
+        return exception.getMessage();
+    }
 }

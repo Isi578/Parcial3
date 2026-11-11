@@ -1,14 +1,165 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.TableColumn?>
-<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
-<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.NotificacionesController" spacing="18" styleClass="page">
-    <padding><Insets top="28" right="32" bottom="32" left="32"/></padding>
-    <VBox spacing="4"><Label text="Notificaciones" styleClass="page-title"/><Label text="Consulta notificaciones e historial de eventos" styleClass="muted-text"/></VBox>
-    <Label text="Notificaciones recientes" styleClass="section-title"/>
-    <TableView VBox.vgrow="ALWAYS"><columns><TableColumn text="Tipo" prefWidth="150"/><TableColumn text="Descripción" prefWidth="440"/><TableColumn text="Fecha y hora" prefWidth="200"/></columns></TableView>
-    <Label text="Historial de eventos" styleClass="section-title"/>
-    <TableView prefHeight="190"><columns><TableColumn text="Evento" prefWidth="180"/><TableColumn text="Descripción" prefWidth="430"/><TableColumn text="Fecha y hora" prefWidth="200"/></columns></TableView>
+
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="controller.NotificacionesController"
+      spacing="16"
+      style="-fx-background-color: #f8fafc;">
+
+    <padding>
+        <Insets top="24"
+                right="30"
+                bottom="24"
+                left="30"/>
+    </padding>
+
+    <Label text="Events and Notifications"
+           style="-fx-font-size: 24px;
+                  -fx-font-weight: bold;
+                  -fx-text-fill: #0f172a;"/>
+
+    <Label text="Observe how device operations generate independent history and notification reactions."
+           wrapText="true"
+           style="-fx-font-size: 13px;
+                  -fx-text-fill: #475569;"/>
+
+    <HBox alignment="CENTER_LEFT"
+          spacing="12">
+
+        <CheckBox fx:id="notificationsEnabledCheckBox"
+                  text="Notifications enabled"
+                  onAction="#updateNotificationPreference"
+                  style="-fx-font-size: 13px;
+                         -fx-text-fill: #0f172a;"/>
+
+        <Button text="Refresh"
+                onAction="#refreshActivity"
+                style="-fx-background-color: #2563eb;
+                       -fx-text-fill: white;
+                       -fx-font-weight: bold;
+                       -fx-background-radius: 6;"/>
+
+        <Button text="Clear Notifications"
+                onAction="#clearNotifications"
+                style="-fx-background-color: #be185d;
+                       -fx-text-fill: white;
+                       -fx-font-weight: bold;
+                       -fx-background-radius: 6;"/>
+
+        <Button text="Clear Events"
+                onAction="#clearEventHistory"
+                style="-fx-background-color: #d97706;
+                       -fx-text-fill: white;
+                       -fx-font-weight: bold;
+                       -fx-background-radius: 6;"/>
+
+        <Button text="Clear All Activity"
+                onAction="#clearAllActivity"
+                style="-fx-background-color: #64748b;
+                       -fx-text-fill: white;
+                       -fx-font-weight: bold;
+                       -fx-background-radius: 6;"/>
+
+        <HBox HBox.hgrow="ALWAYS"/>
+
+    </HBox>
+
+    <Label fx:id="feedbackLabel"
+           text="Ready."
+           wrapText="true"
+           style="-fx-font-size: 13px;
+                  -fx-text-fill: #047857;"/>
+
+    <Separator/>
+
+    <GridPane hgap="16"
+              vgap="10"
+              VBox.vgrow="ALWAYS">
+
+        <columnConstraints>
+            <ColumnConstraints percentWidth="50"/>
+            <ColumnConstraints percentWidth="50"/>
+        </columnConstraints>
+
+        <VBox spacing="8"
+              GridPane.columnIndex="0"
+              GridPane.rowIndex="0">
+
+            <Label text="Event History"
+                   style="-fx-font-size: 16px;
+                          -fx-font-weight: bold;
+                          -fx-text-fill: #0f172a;"/>
+
+            <Label fx:id="eventCountLabel"
+                   text="Recorded events: 0"
+                   style="-fx-font-size: 12px;
+                          -fx-text-fill: #475569;"/>
+
+        </VBox>
+
+        <VBox spacing="8"
+              GridPane.columnIndex="1"
+              GridPane.rowIndex="0">
+
+            <Label text="Notification Messages"
+                   style="-fx-font-size: 16px;
+                          -fx-font-weight: bold;
+                          -fx-text-fill: #0f172a;"/>
+
+            <Label fx:id="notificationCountLabel"
+                   text="Notifications: 0"
+                   style="-fx-font-size: 12px;
+                          -fx-text-fill: #475569;"/>
+
+        </VBox>
+
+        <ListView fx:id="eventsListView"
+                  prefHeight="350"
+                  GridPane.columnIndex="0"
+                  GridPane.rowIndex="1"
+                  style="-fx-background-radius: 8;
+                         -fx-border-radius: 8;
+                         -fx-border-color: #cbd5e1;"/>
+
+        <ListView fx:id="notificationsListView"
+                  prefHeight="350"
+                  GridPane.columnIndex="1"
+                  GridPane.rowIndex="1"
+                  style="-fx-background-radius: 8;
+                         -fx-border-radius: 8;
+                         -fx-border-color: #cbd5e1;"/>
+
+    </GridPane>
+
+    <VBox spacing="8"
+          style="-fx-background-color: white;
+                 -fx-padding: 14;
+                 -fx-background-radius: 8;
+                 -fx-border-color: #e2e8f0;
+                 -fx-border-radius: 8;">
+
+        <Label text="Latest Activity"
+               style="-fx-font-size: 15px;
+                      -fx-font-weight: bold;
+                      -fx-text-fill: #0f172a;"/>
+
+        <Label fx:id="latestActivityLabel"
+               text="No activity recorded."
+               wrapText="true"
+               style="-fx-font-size: 12px;
+                      -fx-text-fill: #334155;"/>
+
+    </VBox>
+
 </VBox>

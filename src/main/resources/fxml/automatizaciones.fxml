@@ -1,15 +1,195 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
-<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.AutomatizacionesController" spacing="18" styleClass="page">
-    <padding><Insets top="28" right="32" bottom="32" left="32"/></padding>
-    <HBox alignment="CENTER_LEFT" spacing="12"><VBox spacing="4"><Label text="Automatizaciones" styleClass="page-title"/><Label text="Define condiciones y acciones para tu hogar" styleClass="muted-text"/></VBox><HBox HBox.hgrow="ALWAYS"/><Button text="+ Crear automatización" onAction="#crearAutomatizacion" styleClass="primary-button"/></HBox>
-    <HBox spacing="18" VBox.vgrow="ALWAYS">
-        <VBox spacing="12" prefWidth="350" styleClass="content-card"><Label text="Lista de automatizaciones" styleClass="section-title"/><ListView VBox.vgrow="ALWAYS"/></VBox>
-        <VBox spacing="16" HBox.hgrow="ALWAYS" styleClass="content-card"><Label text="Configuración de regla" styleClass="section-title"/><Label text="Condición" styleClass="field-label"/><Label text="Selecciona una automatización para ver su condición." styleClass="form-placeholder"/><Label text="Acciones" styleClass="field-label"/><Label text="Las acciones asociadas se mostrarán aquí." styleClass="form-placeholder"/><HBox spacing="10"><Button text="Activar" onAction="#activarAutomatizacion" styleClass="primary-button"/><Button text="Desactivar" onAction="#desactivarAutomatizacion"/></HBox></VBox>
-    </HBox>
-</VBox>
+
+<ScrollPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="controller.AutomatizacionesController"
+            fitToWidth="true"
+            style="-fx-background-color: #f8fafc;
+                   -fx-background: #f8fafc;">
+
+    <content>
+        <VBox spacing="18"
+              style="-fx-background-color: #f8fafc;">
+
+            <padding>
+                <Insets top="24"
+                        right="30"
+                        bottom="24"
+                        left="30"/>
+            </padding>
+
+            <Label text="Motion Automation"
+                   style="-fx-font-size: 24px;
+                          -fx-font-weight: bold;
+                          -fx-text-fill: #0f172a;"/>
+
+            <Label text="Simulate a motion event and observe how Mediator activates Strategy, Command and State."
+                   wrapText="true"
+                   style="-fx-font-size: 13px;
+                          -fx-text-fill: #475569;"/>
+
+            <HBox spacing="10">
+
+                <Button fx:id="simulateMotionButton"
+                        text="Simulate Motion"
+                        onAction="#simulateMotion"
+                        style="-fx-background-color: #16a34a;
+                               -fx-text-fill: white;
+                               -fx-font-weight: bold;
+                               -fx-background-radius: 6;"/>
+
+                <Button fx:id="clearMotionButton"
+                        text="Clear Motion"
+                        onAction="#clearMotion"
+                        style="-fx-background-color: #0284c7;
+                               -fx-text-fill: white;
+                               -fx-font-weight: bold;
+                               -fx-background-radius: 6;"/>
+
+                <Button fx:id="resetLightButton"
+                        text="Turn Off Light"
+                        onAction="#resetLight"
+                        style="-fx-background-color: #dc2626;
+                               -fx-text-fill: white;
+                               -fx-font-weight: bold;
+                               -fx-background-radius: 6;"/>
+
+                <Button text="Refresh"
+                        onAction="#refreshAutomation"
+                        style="-fx-background-color: #334155;
+                               -fx-text-fill: white;
+                               -fx-font-weight: bold;
+                               -fx-background-radius: 6;"/>
+
+            </HBox>
+
+            <Label fx:id="feedbackLabel"
+                   text="Preparing automation..."
+                   wrapText="true"
+                   style="-fx-font-size: 13px;
+                          -fx-text-fill: #047857;"/>
+
+            <Separator/>
+
+            <GridPane hgap="16"
+                      vgap="16">
+
+                <Label text="Automation and Strategy"
+                       GridPane.columnIndex="0"
+                       GridPane.rowIndex="0"
+                       style="-fx-font-size: 15px;
+                              -fx-font-weight: bold;
+                              -fx-text-fill: #0f172a;"/>
+
+                <Label text="Sensor"
+                       GridPane.columnIndex="1"
+                       GridPane.rowIndex="0"
+                       style="-fx-font-size: 15px;
+                              -fx-font-weight: bold;
+                              -fx-text-fill: #0f172a;"/>
+
+                <Label fx:id="automationStatusLabel"
+                       text="Automation status"
+                       wrapText="true"
+                       prefWidth="350"
+                       minHeight="120"
+                       GridPane.columnIndex="0"
+                       GridPane.rowIndex="1"
+                       style="-fx-background-color: white;
+                              -fx-padding: 14;
+                              -fx-background-radius: 8;
+                              -fx-border-color: #e2e8f0;
+                              -fx-border-radius: 8;
+                              -fx-text-fill: #334155;"/>
+
+                <Label fx:id="sensorStatusLabel"
+                       text="Sensor status"
+                       wrapText="true"
+                       prefWidth="350"
+                       minHeight="120"
+                       GridPane.columnIndex="1"
+                       GridPane.rowIndex="1"
+                       style="-fx-background-color: white;
+                              -fx-padding: 14;
+                              -fx-background-radius: 8;
+                              -fx-border-color: #e2e8f0;
+                              -fx-border-radius: 8;
+                              -fx-text-fill: #334155;"/>
+
+                <Label text="Target Device"
+                       GridPane.columnIndex="0"
+                       GridPane.rowIndex="2"
+                       style="-fx-font-size: 15px;
+                              -fx-font-weight: bold;
+                              -fx-text-fill: #0f172a;"/>
+
+                <Label text="Mediator"
+                       GridPane.columnIndex="1"
+                       GridPane.rowIndex="2"
+                       style="-fx-font-size: 15px;
+                              -fx-font-weight: bold;
+                              -fx-text-fill: #0f172a;"/>
+
+                <Label fx:id="lightStatusLabel"
+                       text="Target device status"
+                       wrapText="true"
+                       prefWidth="350"
+                       minHeight="120"
+                       GridPane.columnIndex="0"
+                       GridPane.rowIndex="3"
+                       style="-fx-background-color: white;
+                              -fx-padding: 14;
+                              -fx-background-radius: 8;
+                              -fx-border-color: #e2e8f0;
+                              -fx-border-radius: 8;
+                              -fx-text-fill: #334155;"/>
+
+                <Label fx:id="mediatorStatusLabel"
+                       text="Mediator status"
+                       wrapText="true"
+                       prefWidth="350"
+                       minHeight="120"
+                       GridPane.columnIndex="1"
+                       GridPane.rowIndex="3"
+                       style="-fx-background-color: white;
+                              -fx-padding: 14;
+                              -fx-background-radius: 8;
+                              -fx-border-color: #e2e8f0;
+                              -fx-border-radius: 8;
+                              -fx-text-fill: #334155;"/>
+
+            </GridPane>
+
+            <VBox spacing="8"
+                  style="-fx-background-color: white;
+                         -fx-padding: 14;
+                         -fx-background-radius: 8;
+                         -fx-border-color: #e2e8f0;
+                         -fx-border-radius: 8;">
+
+                <Label text="Observer Activity"
+                       style="-fx-font-size: 15px;
+                              -fx-font-weight: bold;
+                              -fx-text-fill: #0f172a;"/>
+
+                <Label fx:id="observerStatusLabel"
+                       text="Observer status"
+                       wrapText="true"
+                       style="-fx-font-size: 12px;
+                              -fx-text-fill: #334155;"/>
+
+            </VBox>
+
+        </VBox>
+    </content>
+
+</ScrollPane>
