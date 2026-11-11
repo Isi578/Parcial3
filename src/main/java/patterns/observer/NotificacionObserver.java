@@ -2,6 +2,9 @@ package patterns.observer;
 
 import model.Dispositivo;
 import model.Evento;
+import model.Notificacion;
+import util.enums.TipoEvento;
+import util.enums.TipoNotificacion;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -10,6 +13,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 
 public class NotificacionObserver implements Observador {
 
@@ -19,6 +23,9 @@ public class NotificacionObserver implements Observador {
             );
 
     private final List<String> notificationMessages =
+            new ArrayList<>();
+
+    private final List<Notificacion> notifications =
             new ArrayList<>();
 
     private boolean enabled = true;
@@ -34,15 +41,28 @@ public class NotificacionObserver implements Observador {
             return;
         }
 
-        notificationMessages.add(
-                buildNotificationMessage(evento)
-        );
+        String message = buildNotificationMessage(evento);
+        notificationMessages.add(message);
+        notifications.add(new Notificacion(
+                UUID.randomUUID().toString(),
+                evento.getTipo() == TipoEvento.MOVIMIENTO
+                        ? TipoNotificacion.ALERTA
+                        : TipoNotificacion.INFORMACION,
+                message,
+                evento.getFecha() == null
+                        ? LocalDateTime.now()
+                        : evento.getFecha()
+        ));
     }
 
     public List<String> getNotificationMessages() {
         return Collections.unmodifiableList(
                 notificationMessages
         );
+    }
+
+    public List<Notificacion> getNotifications() {
+        return Collections.unmodifiableList(notifications);
     }
 
     public Optional<String> getLastNotification() {
@@ -75,6 +95,7 @@ public class NotificacionObserver implements Observador {
 
     public void clearNotifications() {
         notificationMessages.clear();
+        notifications.clear();
     }
 
     private static String buildNotificationMessage(

@@ -52,6 +52,27 @@
 
     <HBox spacing="10">
 
+        <Button text="Add Device"
+                onAction="#addDevice"
+                style="-fx-background-color: #2563eb;
+                       -fx-text-fill: white;
+                       -fx-font-weight: bold;
+                       -fx-background-radius: 6;"/>
+
+        <Button text="Edit Selected"
+                onAction="#editSelectedDevice"
+                style="-fx-background-color: #475569;
+                       -fx-text-fill: white;
+                       -fx-font-weight: bold;
+                       -fx-background-radius: 6;"/>
+
+        <Button text="Delete Selected"
+                onAction="#deleteSelectedDevice"
+                style="-fx-background-color: #991b1b;
+                       -fx-text-fill: white;
+                       -fx-font-weight: bold;
+                       -fx-background-radius: 6;"/>
+
         <Button fx:id="turnOnButton"
                 text="Turn On"
                 onAction="#turnOnSelectedDevice"

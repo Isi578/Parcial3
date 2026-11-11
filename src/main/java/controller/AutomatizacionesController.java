@@ -1,9 +1,20 @@
 package controller;
 
 import app.ApplicationContext;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 import model.Automatizacion;
 import model.Dispositivo;
 import model.SensorMovimiento;
@@ -16,8 +27,10 @@ import patterns.mediator.HogarMediator;
 import patterns.observer.HistorialObserver;
 import patterns.observer.NotificacionObserver;
 import patterns.strategy.EstrategiaPorMovimiento;
+import util.enums.TipoEvento;
 
 import java.util.List;
+import java.io.IOException;
 
 public class AutomatizacionesController {
 
@@ -50,6 +63,9 @@ public class AutomatizacionesController {
 
     private final NotificacionObserver notificationObserver =
             applicationContext.getNotificationObserver();
+
+    private final ObservableList<Automatizacion> automations =
+            FXCollections.observableArrayList();
 
     private SensorMovimiento motionSensor;
     private Dispositivo targetLight;
@@ -84,11 +100,16 @@ public class AutomatizacionesController {
     private Button resetLightButton;
 
     @FXML
+    private ListView<Automatizacion> automationListView;
+
+    @FXML
     private void initialize() {
         try {
             prepareDemonstrationDevices();
             prepareMediatorComponent();
             prepareMotionAutomation();
+            configureAutomationList();
+            refreshAutomationList();
             refreshView();
 
             showFeedback(
@@ -102,6 +123,132 @@ public class AutomatizacionesController {
                     getErrorMessage(exception),
                     true
             );
+        }
+    }
+
+    private void configureAutomationList() {
+        automationListView.setItems(automations);
+        automationListView.setCellFactory(list -> new ListCell<>() {
+            @Override
+            protected void updateItem(Automatizacion automation, boolean empty) {
+                super.updateItem(automation, empty);
+                setText(empty || automation == null ? null
+                        : automation.getNombre() + " | " + automation.getEstado());
+            }
+        });
+        automationListView.getSelectionModel().selectedItemProperty()
+                .addListener((observable, previous, selected) -> {
+                    if (selected != null) {
+                        automationStatusLabel.setText(
+                                "Selected rule: " + selected.getNombre()
+                                        + "\nStatus: " + selected.getEstado()
+                                        + "\nResult: " + selected.getLastExecutionResult()
+                        );
+                    }
+                });
+    }
+
+    @FXML
+    private void refreshAutomationList() {
+        if (automationListView == null) {
+            return;
+        }
+        String selectedId = automationListView.getSelectionModel().getSelectedItem() == null
+                ? null
+                : automationListView.getSelectionModel().getSelectedItem().getId();
+        automations.setAll(applicationContext.getAutomatizacionService()
+                .obtenerAutomatizaciones());
+        automationListView.refresh();
+        if (selectedId != null) {
+            automations.stream()
+                    .filter(automation -> selectedId.equals(automation.getId()))
+                    .findFirst()
+                    .ifPresent(automation -> automationListView.getSelectionModel().select(automation));
+        }
+    }
+
+    @FXML
+    private void addAutomation() {
+        openAutomationForm(null);
+    }
+
+    @FXML
+    private void editSelectedAutomation() {
+        Automatizacion selected = automationListView.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            showFeedback("Select an automation first.", true);
+        } else if (AUTOMATION_ID.equals(selected.getId())) {
+            showFeedback("The built-in demonstration rule is read-only.", true);
+        } else {
+            openAutomationForm(selected);
+        }
+    }
+
+    @FXML
+    private void deleteSelectedAutomation() {
+        Automatizacion selected = automationListView.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            showFeedback("Select an automation first.", true);
+            return;
+        }
+        if (AUTOMATION_ID.equals(selected.getId())) {
+            showFeedback("The built-in demonstration rule cannot be deleted.", true);
+            return;
+        }
+        Alert confirmation = new Alert(
+                Alert.AlertType.CONFIRMATION,
+                "Delete rule '" + selected.getNombre() + "'?",
+                ButtonType.CANCEL,
+                ButtonType.OK
+        );
+        confirmation.setHeaderText("Delete automation");
+        confirmation.initOwner(automationListView.getScene().getWindow());
+        if (confirmation.showAndWait().orElse(ButtonType.CANCEL) != ButtonType.OK) {
+            return;
+        }
+        try {
+            applicationContext.removeAutomation(MOTION_EVENT, selected.getId());
+            refreshAutomationList();
+            refreshView();
+            showFeedback("Automation deleted.", false);
+        } catch (RuntimeException exception) {
+            showFeedback(getErrorMessage(exception), true);
+        }
+    }
+
+    private void openAutomationForm(Automatizacion existing) {
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/fxml/automatizacion_form.fxml")
+            );
+            Parent root = loader.load();
+            AutomatizacionFormController form = loader.getController();
+            form.configure(existing);
+            Stage stage = new Stage();
+            stage.initOwner(automationListView.getScene().getWindow());
+            stage.initModality(Modality.WINDOW_MODAL);
+            stage.setTitle(existing == null ? "Add automation" : "Edit automation");
+            stage.setScene(new Scene(root));
+            form.setOnSave(automation -> {
+                try {
+                    if (existing == null) {
+                        applicationContext.registerAutomation(MOTION_EVENT, automation);
+                    } else {
+                        applicationContext.getAutomatizacionService()
+                                .actualizarAutomatizacion(automation);
+                    }
+                    stage.close();
+                    refreshAutomationList();
+                    automationListView.getSelectionModel().select(automation);
+                    refreshView();
+                    showFeedback("Automation saved.", false);
+                } catch (RuntimeException exception) {
+                    form.showError(exception.getMessage());
+                }
+            });
+            stage.showAndWait();
+        } catch (IOException exception) {
+            showFeedback("Could not open the automation form: " + exception.getMessage(), true);
         }
     }
 
@@ -241,7 +388,7 @@ public class AutomatizacionesController {
                 )
         );
 
-        homeMediator.registerAutomation(
+        applicationContext.registerAutomation(
                 MOTION_EVENT,
                 automation
         );
@@ -252,14 +399,10 @@ public class AutomatizacionesController {
     @FXML
     private void simulateMotion() {
         try {
-            ensureSensorIsActive();
+            prepareMotionEventForAllSensors(true);
 
             boolean lightWasActive =
                     targetLight.isActivo();
-
-            motionSensor.setMovimientoDetectado(
-                    true
-            );
 
             int executedAutomations =
                     sensorComponent.reportEvent(
@@ -272,12 +415,14 @@ public class AutomatizacionesController {
 
             homeFacade.publishDeviceEvent(
                     motionSensor,
+                    TipoEvento.MOVIMIENTO,
                     "Motion was detected by the hall sensor."
             );
 
             if (lightChanged) {
                 homeFacade.publishDeviceEvent(
                         targetLight,
+                        TipoEvento.ENCENDIDO,
                         "Living room light was turned on "
                                 + "by the motion automation."
                 );
@@ -303,12 +448,11 @@ public class AutomatizacionesController {
     @FXML
     private void clearMotion() {
         try {
-            motionSensor.setMovimientoDetectado(
-                    false
-            );
+            prepareMotionEventForAllSensors(false);
 
             homeFacade.publishDeviceEvent(
                     motionSensor,
+                    TipoEvento.CAMBIO_ESTADO,
                     "Motion detection was cleared."
             );
 
@@ -360,22 +504,16 @@ public class AutomatizacionesController {
         );
     }
 
-    private void ensureSensorIsActive() {
-        if (motionSensor.isActivo()) {
-            return;
-        }
-
-        boolean changed =
-                homeFacade.turnOnDevice(
-                        motionSensor.getId()
-                );
-
-        if (!changed
-                && !motionSensor.isActivo()) {
-
-            throw new IllegalStateException(
-                    "The motion sensor could not be turned on."
-            );
+    private void prepareMotionEventForAllSensors(boolean detected) {
+        List<SensorMovimiento> sensors = homeFacade.getAllDevices().stream()
+                .filter(SensorMovimiento.class::isInstance)
+                .map(SensorMovimiento.class::cast)
+                .toList();
+        for (SensorMovimiento sensor : sensors) {
+            if (detected && !sensor.isActivo()) {
+                homeFacade.turnOnDevice(sensor.getId());
+            }
+            sensor.setMovimientoDetectado(detected);
         }
     }
 
@@ -384,30 +522,31 @@ public class AutomatizacionesController {
             boolean lightChanged) {
 
         if (executedAutomations == 0) {
-            return "The mediator did not execute "
-                    + "an automation.";
+            return "Motion event processed. No active rule matched.";
         }
-
-        if (lightChanged) {
-            return "Motion detected. The mediator executed "
-                    + executedAutomations
-                    + " automation(s) and the light was turned on.";
-        }
-
         return "Motion detected. The mediator executed "
                 + executedAutomations
-                + " automation(s), but the light was already on.";
+                + " automation(s). Demo light: "
+                + (targetLight.isActivo() ? "ON" : "OFF")
+                + (lightChanged ? " (turned on by this event)." : ".");
     }
 
     private void refreshView() {
+        Automatizacion displayedAutomation =
+                automationListView == null
+                        ? null
+                        : automationListView.getSelectionModel().getSelectedItem();
+        if (displayedAutomation == null) {
+            displayedAutomation = motionAutomation;
+        }
         automationStatusLabel.setText(
                 "Automation: "
-                        + motionAutomation.getNombre()
+                        + displayedAutomation.getNombre()
                         + "\nResult: "
-                        + motionAutomation
+                        + displayedAutomation
                         .getLastExecutionResult()
                         + "\nCommand executions: "
-                        + motionAutomation
+                        + displayedAutomation
                         .getExecutionCount()
         );
 

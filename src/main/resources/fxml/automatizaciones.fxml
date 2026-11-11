@@ -3,6 +3,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.layout.GridPane?>
@@ -187,6 +188,28 @@
                        style="-fx-font-size: 12px;
                               -fx-text-fill: #334155;"/>
 
+            </VBox>
+
+            <VBox spacing="8"
+                  style="-fx-background-color: white;
+                         -fx-padding: 14;
+                         -fx-background-radius: 8;
+                         -fx-border-color: #e2e8f0;
+                         -fx-border-radius: 8;">
+                <Label text="Automation Rules"
+                       style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #0f172a;"/>
+                <Label text="Create and manage motion rules. The built-in rule is reserved for the pattern demonstration."
+                       wrapText="true"
+                       style="-fx-font-size: 12px; -fx-text-fill: #475569;"/>
+                <ListView fx:id="automationListView"
+                          prefHeight="150"
+                          style="-fx-background-radius: 8; -fx-border-radius: 8; -fx-border-color: #cbd5e1;"/>
+                <HBox spacing="10">
+                    <Button text="Add Rule" onAction="#addAutomation"/>
+                    <Button text="Edit Selected" onAction="#editSelectedAutomation"/>
+                    <Button text="Delete Selected" onAction="#deleteSelectedAutomation"/>
+                    <Button text="Refresh" onAction="#refreshAutomationList"/>
+                </HBox>
             </VBox>
 
         </VBox>

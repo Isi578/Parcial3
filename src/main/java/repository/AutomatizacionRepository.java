@@ -10,4 +10,5 @@ public interface AutomatizacionRepository {
     Optional<Automatizacion> buscarPorId(String id);
     void guardar(Automatizacion automatizacion);
     void eliminar(String id);
+    boolean existePorId(String id);
 }

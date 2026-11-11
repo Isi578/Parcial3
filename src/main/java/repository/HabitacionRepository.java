@@ -10,4 +10,5 @@ public interface HabitacionRepository {
     Optional<Habitacion> buscarPorId(String id);
     void guardar(Habitacion habitacion);
     void eliminar(String id);
+    boolean existePorId(String id);
 }

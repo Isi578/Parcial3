@@ -730,10 +730,16 @@ ApplicationContext crea y comparte:
 
 InMemoryDispositivoRepository
 DispositivoService
+InMemoryHabitacionRepository
+HabitacionService
+InMemoryAutomatizacionRepository
+AutomatizacionService
 ControladorComandos
 HogarFacade
 HistorialObserver
 NotificacionObserver
+EventoService
+NotificacionService
 HogarMediator
 ConfiguracionHogar
 Esto evita que cada pantalla cree repositorios, servicios o historiales independientes.
@@ -777,6 +783,8 @@ Limitaciones actuales
 Los datos se almacenan únicamente en memoria.
 Los dispositivos son simulados.
 No existe conexión con dispositivos IoT físicos.
+La interfaz permite registrar, editar y eliminar dispositivos, habitaciones y reglas de automatización basadas en movimiento. Las estrategias de horario y temperatura están implementadas en el dominio, pero no tienen formularios de configuración en la interfaz.
+La regla integrada de demostración está protegida contra edición y eliminación para que el flujo de patrones siempre pueda mostrarse.
 La demostración visual de automatización utiliza movimiento.
 Las estrategias por horario y temperatura están implementadas en el dominio, pero no tienen una pantalla dedicada.
 La autenticación y el acceso remoto están fuera del alcance.

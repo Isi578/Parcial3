@@ -11,11 +11,13 @@
     <padding><Insets top="28" right="32" bottom="32" left="32"/></padding>
     <Label text="Crear automatización" styleClass="page-title"/>
     <VBox spacing="10" maxWidth="760" styleClass="content-card">
-        <Label text="Nombre" styleClass="field-label"/><TextField promptText="Nombre de la automatización"/>
-        <Label text="Descripción" styleClass="field-label"/><TextArea promptText="Describe el propósito de esta regla" prefRowCount="3" wrapText="true"/>
-        <Label text="Condición" styleClass="field-label"/><ComboBox promptText="Seleccionar condición"/>
-        <Label text="Acciones" styleClass="field-label"/><ComboBox promptText="Seleccionar acciones" maxWidth="Infinity"/>
-        <Label text="Estado inicial" styleClass="field-label"/><ComboBox promptText="Activa o inactiva"/>
+        <Label text="Name" styleClass="field-label"/><TextField fx:id="nameField" promptText="Automation name"/>
+        <Label text="Description" styleClass="field-label"/><TextArea fx:id="descriptionField" promptText="Describe this rule" prefRowCount="3" wrapText="true"/>
+        <Label text="Motion sensor" styleClass="field-label"/><ComboBox fx:id="sensorComboBox" promptText="Select sensor" maxWidth="Infinity"/>
+        <Label text="Target device" styleClass="field-label"/><ComboBox fx:id="targetDeviceComboBox" promptText="Select target device" maxWidth="Infinity"/>
+        <Label text="Action" styleClass="field-label"/><ComboBox fx:id="actionComboBox" promptText="Select action" maxWidth="Infinity"/>
+        <Label text="Status" styleClass="field-label"/><ComboBox fx:id="stateComboBox" promptText="Active or inactive" maxWidth="Infinity"/>
     </VBox>
+    <Label fx:id="errorLabel" wrapText="true" style="-fx-text-fill: #b91c1c;"/>
     <HBox spacing="10"><Button text="Guardar" onAction="#guardar" styleClass="primary-button"/><Button text="Cancelar" onAction="#cancelar"/></HBox>
 </VBox>

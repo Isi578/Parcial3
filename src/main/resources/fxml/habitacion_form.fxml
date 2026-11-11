@@ -10,8 +10,9 @@
     <padding><Insets top="28" right="32" bottom="32" left="32"/></padding>
     <Label text="Registrar habitación" styleClass="page-title"/>
     <VBox spacing="10" maxWidth="680" styleClass="content-card">
-        <Label text="Nombre" styleClass="field-label"/><TextField promptText="Ej. Sala"/>
-        <Label text="Descripción" styleClass="field-label"/><TextArea promptText="Descripción del espacio" prefRowCount="4" wrapText="true"/>
+        <Label text="Name" styleClass="field-label"/><TextField fx:id="nameField" promptText="e.g. Living room"/>
+        <Label text="Description" styleClass="field-label"/><TextArea fx:id="descriptionField" promptText="Describe this room" prefRowCount="4" wrapText="true"/>
     </VBox>
+    <Label fx:id="errorLabel" wrapText="true" style="-fx-text-fill: #b91c1c;"/>
     <HBox spacing="10"><Button text="Guardar" onAction="#guardar" styleClass="primary-button"/><Button text="Cancelar" onAction="#cancelar"/></HBox>
 </VBox>

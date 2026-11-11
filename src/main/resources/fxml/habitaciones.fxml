@@ -46,6 +46,25 @@
            style="-fx-font-size: 13px;
                   -fx-text-fill: #047857;"/>
 
+    <VBox spacing="8"
+          style="-fx-background-color: white;
+                 -fx-padding: 14;
+                 -fx-background-radius: 8;
+                 -fx-border-color: #e2e8f0;
+                 -fx-border-radius: 8;">
+        <Label text="Room Administration"
+               style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #0f172a;"/>
+        <ListView fx:id="roomsListView"
+                  prefHeight="120"
+                  style="-fx-background-radius: 8; -fx-border-radius: 8; -fx-border-color: #cbd5e1;"/>
+        <HBox spacing="10">
+            <Button text="Add Room" onAction="#addRoom"/>
+            <Button text="Edit Selected" onAction="#editSelectedRoom"/>
+            <Button text="Delete Selected" onAction="#deleteSelectedRoom"/>
+            <Button text="Refresh" onAction="#refreshRooms"/>
+        </HBox>
+    </VBox>
+
     <Separator/>
 
     <GridPane hgap="16"

@@ -241,8 +241,13 @@ public final class HogarMediator
                 eventAutomations) {
 
             try {
+                int previousExecutionCount =
+                        automation.getExecutionCount();
                 automation.executeStrategy();
-                executedForCurrentEvent++;
+                if (automation.getExecutionCount()
+                        > previousExecutionCount) {
+                    executedForCurrentEvent++;
+                }
             } catch (RuntimeException exception) {
                 failures.add(
                         automation.getId()

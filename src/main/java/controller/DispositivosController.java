@@ -4,10 +4,17 @@ import app.ApplicationContext;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 import model.CerraduraInteligente;
 import model.Dispositivo;
 import patterns.command.BloquearPuertaCommand;
@@ -23,6 +30,7 @@ import patterns.observer.HistorialObserver;
 import patterns.observer.NotificacionObserver;
 
 import java.util.Optional;
+import java.io.IOException;
 
 public class DispositivosController {
 
@@ -87,6 +95,79 @@ public class DispositivosController {
         devicesListView
                 .getSelectionModel()
                 .selectFirst();
+    }
+
+    @FXML
+    private void addDevice() {
+        openDeviceForm(null);
+    }
+
+    @FXML
+    private void editSelectedDevice() {
+        Dispositivo selected = getRequiredSelectedDevice();
+        if (selected != null) {
+            openDeviceForm(selected);
+        }
+    }
+
+    @FXML
+    private void deleteSelectedDevice() {
+        Dispositivo selected = getRequiredSelectedDevice();
+        if (selected == null) {
+            return;
+        }
+        Alert confirmation = new Alert(
+                Alert.AlertType.CONFIRMATION,
+                "Delete '" + selected.getNombre() + "'?",
+                ButtonType.CANCEL,
+                ButtonType.OK
+        );
+        confirmation.setHeaderText("Delete device");
+        confirmation.initOwner(devicesListView.getScene().getWindow());
+        if (confirmation.showAndWait().orElse(ButtonType.CANCEL) != ButtonType.OK) {
+            return;
+        }
+        try {
+            homeFacade.deleteDevice(selected.getId());
+            refreshViewPreservingSelection(null);
+            showFeedback("Device deleted.", false);
+        } catch (RuntimeException exception) {
+            showFeedback(getErrorMessage(exception), true);
+        }
+    }
+
+    private void openDeviceForm(Dispositivo existingDevice) {
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/fxml/dispositivo_form.fxml")
+            );
+            Parent root = loader.load();
+            DispositivoFormController form = loader.getController();
+            form.configure(existingDevice);
+
+            Stage stage = new Stage();
+            stage.initOwner(devicesListView.getScene().getWindow());
+            stage.initModality(Modality.WINDOW_MODAL);
+            stage.setTitle(existingDevice == null ? "Add device" : "Edit device");
+            stage.setScene(new Scene(root));
+            form.setOnSave(device -> {
+                try {
+                    if (existingDevice == null) {
+                        homeFacade.registerDevice(device);
+                    } else {
+                        homeFacade.updateDevice(device);
+                    }
+                    stage.close();
+                    refreshViewPreservingSelection(device.getId());
+                    showFeedback("Device saved.", false);
+                } catch (RuntimeException exception) {
+                    form.showError(exception.getMessage());
+                }
+            });
+            stage.showAndWait();
+        } catch (IOException exception) {
+            showFeedback("Could not open the device form: " + exception.getMessage(), true);
+        }
     }
 
     private void configureDeviceList() {

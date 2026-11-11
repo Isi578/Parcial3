@@ -14,7 +14,8 @@ public class Automatizacion {
     private String id;
     private String nombre;
     private String descripcion;
-    private EstadoAutomatizacion estado;
+    private EstadoAutomatizacion estado =
+            EstadoAutomatizacion.ACTIVA;
     private EstrategiaAutomatizacion estrategia;
 
     private final List<Comando> comandos =
@@ -47,10 +48,18 @@ public class Automatizacion {
         this.descripcion =
                 normalizeDescription(descripcion);
 
-        this.estado = estado;
+        this.estado = Objects.requireNonNull(
+                estado,
+                "Automation state cannot be null."
+        );
     }
 
     public void executeStrategy() {
+        if (estado == EstadoAutomatizacion.INACTIVA) {
+            lastExecutionResult = "Automation is inactive.";
+            return;
+        }
+
         EstrategiaAutomatizacion currentStrategy =
                 Objects.requireNonNull(
                         estrategia,
@@ -188,7 +197,10 @@ public class Automatizacion {
     public void setEstado(
             EstadoAutomatizacion estado) {
 
-        this.estado = estado;
+        this.estado = Objects.requireNonNull(
+                estado,
+                "Automation state cannot be null."
+        );
     }
 
     public EstrategiaAutomatizacion getEstrategia() {

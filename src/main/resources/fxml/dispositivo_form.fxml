@@ -11,12 +11,13 @@
     <padding><Insets top="28" right="32" bottom="32" left="32"/></padding>
     <Label text="Registrar dispositivo" styleClass="page-title"/>
     <GridPane hgap="16" vgap="10" styleClass="content-card">
-        <Label text="Nombre" GridPane.rowIndex="0" styleClass="field-label"/><TextField promptText="Nombre del dispositivo" GridPane.rowIndex="1"/>
-        <Label text="Tipo de dispositivo" GridPane.columnIndex="1" GridPane.rowIndex="0" styleClass="field-label"/><ComboBox promptText="Seleccionar tipo" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
-        <Label text="Marca" GridPane.rowIndex="2" styleClass="field-label"/><TextField promptText="Marca" GridPane.rowIndex="3"/>
-        <Label text="Modelo" GridPane.columnIndex="1" GridPane.rowIndex="2" styleClass="field-label"/><TextField promptText="Modelo" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
-        <Label text="Habitación" GridPane.rowIndex="4" styleClass="field-label"/><ComboBox promptText="Seleccionar habitación" GridPane.rowIndex="5"/>
-        <Label text="Estado inicial" GridPane.columnIndex="1" GridPane.rowIndex="4" styleClass="field-label"/><ComboBox promptText="Seleccionar estado" GridPane.columnIndex="1" GridPane.rowIndex="5"/>
+        <Label text="Nombre" GridPane.rowIndex="0" styleClass="field-label"/><TextField fx:id="nameField" promptText="Device name" GridPane.rowIndex="1"/>
+        <Label text="Tipo de dispositivo" GridPane.columnIndex="1" GridPane.rowIndex="0" styleClass="field-label"/><ComboBox fx:id="typeComboBox" promptText="Select type" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+        <Label text="Marca" GridPane.rowIndex="2" styleClass="field-label"/><TextField fx:id="brandField" promptText="Brand" GridPane.rowIndex="3"/>
+        <Label text="Modelo" GridPane.columnIndex="1" GridPane.rowIndex="2" styleClass="field-label"/><TextField fx:id="modelField" promptText="Model" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+        <Label text="Habitación" GridPane.rowIndex="4" styleClass="field-label"/><ComboBox fx:id="roomComboBox" promptText="No room" GridPane.rowIndex="5"/>
+        <Label text="Estado" GridPane.columnIndex="1" GridPane.rowIndex="4" styleClass="field-label"/><ComboBox fx:id="stateComboBox" promptText="Select state" GridPane.columnIndex="1" GridPane.rowIndex="5"/>
     </GridPane>
+    <Label fx:id="errorLabel" wrapText="true" style="-fx-text-fill: #b91c1c;"/>
     <HBox spacing="10"><Button text="Guardar" onAction="#guardar" styleClass="primary-button"/><Button text="Cancelar" onAction="#cancelar"/></HBox>
 </VBox>

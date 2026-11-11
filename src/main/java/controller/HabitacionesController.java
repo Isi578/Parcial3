@@ -4,18 +4,27 @@ import app.ApplicationContext;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 import model.CerraduraInteligente;
 import model.Dispositivo;
+import model.Habitacion;
 import patterns.composite.ComponenteHogar;
 import patterns.composite.DispositivoIndividual;
 import patterns.composite.GrupoDispositivos;
 import patterns.facade.HogarFacade;
 
 import java.util.List;
+import java.io.IOException;
 
 public class HabitacionesController {
 
@@ -34,11 +43,17 @@ public class HabitacionesController {
     private final ObservableList<GrupoDispositivos> groups =
             FXCollections.observableArrayList();
 
+    private final ObservableList<Habitacion> rooms =
+            FXCollections.observableArrayList();
+
     @FXML
     private ListView<GrupoDispositivos> groupsListView;
 
     @FXML
     private ListView<ComponenteHogar> componentsListView;
+
+    @FXML
+    private ListView<Habitacion> roomsListView;
 
     @FXML
     private Label selectedGroupLabel;
@@ -60,6 +75,8 @@ public class HabitacionesController {
 
     @FXML
     private void initialize() {
+        configureRoomList();
+        refreshRooms();
         configureGroupList();
         configureComponentList();
         configureSelectionListener();
@@ -69,6 +86,103 @@ public class HabitacionesController {
             groupsListView
                     .getSelectionModel()
                     .selectFirst();
+        }
+    }
+
+    private void configureRoomList() {
+        roomsListView.setItems(rooms);
+        roomsListView.setCellFactory(list -> new ListCell<>() {
+            @Override
+            protected void updateItem(Habitacion room, boolean empty) {
+                super.updateItem(room, empty);
+                setText(empty || room == null ? null
+                        : room.getNombre() + " | "
+                        + room.getDispositivos().size() + " device(s)");
+            }
+        });
+    }
+
+    @FXML
+    private void addRoom() {
+        openRoomForm(null);
+    }
+
+    @FXML
+    private void editSelectedRoom() {
+        Habitacion room = roomsListView.getSelectionModel().getSelectedItem();
+        if (room == null) {
+            showFeedback("Select a room first.", true);
+            return;
+        }
+        openRoomForm(room);
+    }
+
+    @FXML
+    private void deleteSelectedRoom() {
+        Habitacion room = roomsListView.getSelectionModel().getSelectedItem();
+        if (room == null) {
+            showFeedback("Select a room first.", true);
+            return;
+        }
+        Alert confirmation = new Alert(
+                Alert.AlertType.CONFIRMATION,
+                "Delete room '" + room.getNombre() + "'?",
+                ButtonType.CANCEL,
+                ButtonType.OK
+        );
+        confirmation.setHeaderText("Delete room");
+        confirmation.initOwner(roomsListView.getScene().getWindow());
+        if (confirmation.showAndWait().orElse(ButtonType.CANCEL) != ButtonType.OK) {
+            return;
+        }
+        try {
+            applicationContext.getHabitacionService().eliminarHabitacion(room.getId());
+            refreshRooms();
+            showFeedback("Room deleted.", false);
+        } catch (RuntimeException exception) {
+            showFeedback(getErrorMessage(exception), true);
+        }
+    }
+
+    @FXML
+    private void refreshRooms() {
+        rooms.setAll(applicationContext.getHabitacionService().obtenerHabitaciones());
+        if (roomsListView != null) {
+            roomsListView.refresh();
+        }
+    }
+
+    private void openRoomForm(Habitacion existingRoom) {
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/fxml/habitacion_form.fxml")
+            );
+            Parent root = loader.load();
+            HabitacionFormController form = loader.getController();
+            form.configure(existingRoom);
+            Stage stage = new Stage();
+            stage.initOwner(roomsListView.getScene().getWindow());
+            stage.initModality(Modality.WINDOW_MODAL);
+            stage.setTitle(existingRoom == null ? "Add room" : "Edit room");
+            stage.setScene(new Scene(root));
+            form.setOnSave(room -> {
+                try {
+                    if (existingRoom == null) {
+                        applicationContext.getHabitacionService().registrarHabitacion(room);
+                    } else {
+                        applicationContext.getHabitacionService().actualizarHabitacion(room);
+                    }
+                    stage.close();
+                    refreshRooms();
+                    roomsListView.getSelectionModel().select(room);
+                    showFeedback("Room saved.", false);
+                } catch (RuntimeException exception) {
+                    form.showError(exception.getMessage());
+                }
+            });
+            stage.showAndWait();
+        } catch (IOException exception) {
+            showFeedback("Could not open the room form: " + exception.getMessage(), true);
         }
     }
 

@@ -3,9 +3,12 @@ package patterns.facade;
 import model.Dispositivo;
 import model.Evento;
 import model.Habitacion;
+import util.enums.TipoEvento;
 import patterns.command.ApagarDispositivoCommand;
+import patterns.command.BloquearPuertaCommand;
 import patterns.command.Comando;
 import patterns.command.ControladorComandos;
+import patterns.command.DesbloquearPuertaCommand;
 import patterns.command.EncenderDispositivoCommand;
 import patterns.observer.DispositivoObservable;
 import patterns.observer.HistorialObserver;
@@ -163,6 +166,7 @@ public final class HogarFacade {
         if (changed) {
             publishDeviceEvent(
                     device,
+                    TipoEvento.ENCENDIDO,
                     "Device turned on."
             );
         }
@@ -187,6 +191,7 @@ public final class HogarFacade {
         if (changed) {
             publishDeviceEvent(
                     device,
+                    TipoEvento.APAGADO,
                     "Device turned off."
             );
         }
@@ -263,9 +268,25 @@ public final class HogarFacade {
             Dispositivo device,
             String description) {
 
+        publishDeviceEvent(
+                device,
+                TipoEvento.CAMBIO_ESTADO,
+                description
+        );
+    }
+
+    public void publishDeviceEvent(
+            Dispositivo device,
+            TipoEvento eventType,
+            String description) {
+
         Objects.requireNonNull(
                 device,
                 "Device cannot be null."
+        );
+        Objects.requireNonNull(
+                eventType,
+                "Event type cannot be null."
         );
 
         String validDescription =
@@ -280,7 +301,7 @@ public final class HogarFacade {
         Evento event =
                 new Evento(
                         UUID.randomUUID().toString(),
-                        null,
+                        eventType,
                         validDescription,
                         LocalDateTime.now(),
                         device
@@ -435,6 +456,14 @@ public final class HogarFacade {
                 turnOffCommand) {
 
             return turnOffCommand.getDispositivo();
+        }
+
+        if (command instanceof BloquearPuertaCommand lockCommand) {
+            return lockCommand.getCerradura();
+        }
+
+        if (command instanceof DesbloquearPuertaCommand unlockCommand) {
+            return unlockCommand.getCerradura();
         }
 
         return null;
